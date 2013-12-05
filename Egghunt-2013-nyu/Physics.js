@@ -15,7 +15,6 @@
 		this.scale = scale || 30;
 		this.dtRemaining = 0;
 		this.stepAmount = 1 / 60;
-		this.isWorldEnd = false;
 	}
 
 	Physics.prototype.step = function(dt) {
@@ -25,7 +24,7 @@
 			this.world.Step(this.stepAmount, 8, 3);
 		}
 
-		var obj = this.world.GetBodyList();
+		var body = this.world.GetBodyList();
 
 		if (this.debugDraw) {
 			this.world.DrawDebugData();
@@ -36,18 +35,28 @@
 
 		var deadBodies = [];
 
-		while (obj) {
-			var body = obj.GetUserData();
-			if (body) {
-				body.update();
-				if (body.details.dead)
-					deadBodies.push(obj);
+		var drawLater = [];
+
+		while (body) {
+			var obj = body.GetUserData();
+			if (obj) {
+				obj.update();
+				if (obj.details.dead)
+					deadBodies.push(body);
 				if (!this.debugDraw) {
-					body.draw(this.context);
+					if ( obj.details.zIndex > 0) {
+						drawLater.push(obj);
+					} else {
+						obj.draw(this.context);
+					}
 				}
 			}
 
-			obj = obj.GetNext();
+			body = body.GetNext();
+		}
+
+		for ( var i in drawLater) {
+			drawLater[i].draw(this.context);
 		}
 
 		// Remove dead bodies
@@ -120,7 +129,7 @@
 	};
 
 	Physics.prototype.onTouchStart = function(callback) {
-	
+
 		function handleTouchStart(e) {
 			e.preventDefault();
 			callback(e);

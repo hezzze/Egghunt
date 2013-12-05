@@ -1,5 +1,8 @@
-//TODO comment to polygon winding order for clipper (outer == CW; holes == CCW)
+/*
+ * Global variable dependency: _levelLoader
+ */
 
+//Import Box2D constructors
 var b2Vec2 = Box2D.Common.Math.b2Vec2;
 var b2BodyDef = Box2D.Dynamics.b2BodyDef;
 var b2Body = Box2D.Dynamics.b2Body;
@@ -12,101 +15,38 @@ var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
 var b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
 var b2Transform = Box2D.Common.Math.b2Transform;
 var b2Mat22 = Box2D.Common.Math.b2Mat22;
+var b2RevoluteJointDef = Box2D.Dynamics.Joints.b2RevoluteJointDef;
+var b2PrismaticJointDef = Box2D.Dynamics.Joints.b2PrismaticJointDef;
 
-var physics, lastFrame = new Date().getTime();
-var terrain;
-var DIRT_SIZE = 50;
-var EGG_R = 12.5;
-var DIRT_ID = "dirt";
-var EGG_ID = "egg";
+//Global Game Constants
+var WALL_ID = "wall";
+var START_POINT_ID = "startBox";
+var LEFT_WALL_ID = "leftWall";
+var RIGHT_WALL_ID = "rightWall";
+var BALL_R = 15;
+var BALL_ID = "egg";
+var BUNNY_R = 20;
 
-function levelOne() {
-	// Create the terrain
-	terrain = new Body(physics, {
-		id : DIRT_ID,
-		type : "static",
-		shape : "terrain",
-		color : "#996633",
-		terrainPolys : [{
-			outer : translateShape([{
-				"x" : 0,
-				"y" : 0.5250000357627869
-			}, {
-				"x" : 0.32500001788139343,
-				"y" : 0.42500001192092896
-			}, {
-				"x" : 0.4749999940395355,
-				"y" : 0.4000000059604645
-			}, {
-				"x" : 0.574999988079071,
-				"y" : 0.3499999940395355
-			}, {
-				"x" : 0.6500000357627869,
-				"y" : 0.4000000059604645
-			}, {
-				"x" : 1,
-				"y" : 0.5
-			}, {
-				"x" : 1,
-				"y" : 0
-			}, {
-				"x" : 0,
-				"y" : 0
-			}], 800, 0, 500),
-			holes : []
-		}]
-	});
+// Global Game Variables
+var _terrain;
+var _resources;
+var _levelPos = 0;
+var _physics, _lastFrame = new Date().getTime();
+var _canvasW, _canvasH;
 
-	var sensor = new Body(physics, {
-		type : "static",
-		shape : "circle",
-		x : 400,
-		y : 300,
-		radius : 17.5,
-		isSensor : true,
-		color : "red",
-	});
-
-	sensor.beginContact = function(body) {
-		if (body.details.id === EGG_ID) {
-			this.details.dead = true;
-		}
-	};
-
-	var finishingPoint = new Body(physics, {
-		type : "static",
-		x : 400,
-		y : 590,
-		isSensor : true,
-		height : 20,
-		width : 100,
-		color : "green",
-	});
-
-	finishingPoint.beginContact = function(body) {
-		physics.isWorldEnd = true;
-	};
-}
-
-function levelTwo() {
-}
-
-function levelThree() {
-}
-function levelFour() {
-}
-function levelFive() {
-}
-
-var levelPos = 0;
-var levels = [levelOne, levelTwo, levelThree, levelFour, levelFive];
-
-function resetWorld() {
-	var bodies = physics.world.GetBodyList();
-	for (var i = 0; i < bodies.length; i++) {
-		physics.world.DestroyBody(bodies[i]);
-	}
-}
+var resourceList = [{
+	name : "ballImg",
+	type : "image",
+	url : "imgs/angry-bird-30x30.png"
+}, {
+	name : "bunnyImg",
+	type : "image",
+	url : "imgs/bunny-40x40.png"
+}, {
+	name : "snowPattern",
+	type : "image",
+	url : "imgs/snow-textures-5.jpg"
+}];
 
 window.onerror = function(error) {
 	alert(error);
@@ -115,135 +55,259 @@ window.onerror = function(error) {
 window.gameLoop = function() {
 	var tm = new Date().getTime();
 	requestAnimationFrame(gameLoop);
-	var dt = (tm - lastFrame) / 1000;
+	var dt = (tm - _lastFrame) / 1000;
 	if (dt > 1 / 15) {
 		dt = 1 / 15;
 	}
-	physics.step(dt);
-	lastFrame = tm;
+	_physics.step(dt);
+	_lastFrame = tm;
 };
 
 function init() {
-	var egg = new Image();
 
-	// Wait for the image to load
-	egg.addEventListener("load", function() {
+	var resLoader = new ResourceLoader(resourceList, function(loaded) {
+
+		_resources = loaded;
 
 		var canvas = document.getElementById("b2dCanvas");
-		physics = new Physics(canvas);
-		var canvasW = canvas.width;
-		var canvasH = canvas.height;
+		_physics = new Physics(canvas);
+		_canvasW = canvas.width;
+		_canvasH = canvas.height;
 
 		// physics.debug();
-		physics.collision();
+		_physics.collision();
 
 		// ground
-		new Body(physics, {
-			color : "red",
+		new Body(_physics, {
+			id : WALL_ID,
+			color : "#e5e5e5",
 			type : "static",
-			x : canvasW / 2,
-			y : canvasH + 10,
+			x : _canvasW / 2,
+			y : _canvasH + 10,
 			height : 40,
-			width : canvasW
+			width : _canvasW
+		});
+
+		// ceiling
+		new Body(_physics, {
+			id : WALL_ID,
+			color : "#e5e5e5",
+			type : "static",
+			x : _canvasW / 2,
+			y : -20,
+			height : 40,
+			width : _canvasW
 		});
 
 		// left wall
-		new Body(physics, {
+		new Body(_physics, {
+			id : LEFT_WALL_ID,
 			color : "red",
 			type : "static",
 			x : -10,
-			y : canvasH / 2,
-			height : canvasH * 2,
+			y : _canvasH / 2,
+			height : _canvasH * 2,
 			width : 20
 		});
 
 		// right wall
-		new Body(physics, {
+		new Body(_physics, {
+			id : RIGHT_WALL_ID,
 			color : "red",
 			type : "static",
-			x : canvasW + 10,
-			y : canvasH / 2,
-			height : canvasH * 2,
+			x : _canvasW + 10,
+			y : _canvasH / 2,
+			height : _canvasH * 2,
 			width : 20
 		});
 
-		levelOne();
+		_levelLoader.load(_levelPos);
 
-		physics.rightClickToCreate(function(e) {
+		$('#nextLevel').click(function() {
+			nextLevel();
+		});
+
+		$('#restartLevel').click(function() {
+			restartLevel();
+		});
+
+		_physics.rightClickToCreate(function(e) {
 			var posX = e.offsetX || e.layerX, posY = e.offsetY || e.layerY;
 
-			new Body(physics, {
-				id : EGG_ID,
-				image : egg,
-				shape : "circle",
-				x : posX,
-				y : posY,
-				radius : EGG_R,
-				width : EGG_R * 2,
-				height : EGG_R * 2,
-				density : 1,
-				friction : 0.5,
-				restitution : 0.5
+			_physics.world.QueryPoint(function(fixture) {
+				var obj = fixture.GetBody().GetUserData();
+				if (obj && obj.details.id === START_POINT_ID) {
+					new Body(_physics, {
+						id : BALL_ID,
+						image : _resources.ballImg,
+						shape : "circle",
+						x : posX,
+						y : posY,
+						radius : BALL_R,
+						width : BALL_R * 2,
+						height : BALL_R * 2,
+						density : 1,
+						friction : 0.5,
+						restitution : 0.5,
+						life: 1000
+					});
+				}
+			}, {
+				x : posX / _physics.scale,
+				y : posY / _physics.scale
 			});
-			
-			//Prevent the click event to be triggered
+
+			// if (isPointInBox({
+			// x : posX,
+			// y : posY
+			// }, _box)) {
+			// new Body(_physics, {
+			// id : BALL_ID,
+			// image : _resources.ballImg,
+			// shape : "circle",
+			// x : posX,
+			// y : posY,
+			// radius : BALL_R,
+			// width : BALL_R * 2,
+			// height : BALL_R * 2,
+			// density : 1,
+			// friction : 0.5,
+			// restitution : 0.5
+			// });
+			// }
+
+			// Prevent the click event to be triggered
 			return false;
 		});
 
-		physics.onMouseDown(function(e) {
-			physics.element.addEventListener("mousemove", doExplosion);
+		$("#level-dialog").dialog({
+			autoOpen : false,
+			resizable : false,
+			height : 200,
+			modal : true,
+			buttons : {
+				"Go to next" : function() {
+					nextLevel();
+					$(this).dialog("close");
+				},
+				Cancel : function() {
+					$(this).dialog("close");
+				}
+			}
 		});
 
-		physics.onMouseUp(function(e) {
-			physics.element.removeEventListener("mousemove", doExplosion);
+		_physics.onMouseDown(function(e) {
+			_physics.element.addEventListener("mousemove", doExplosion);
+		});
+
+		_physics.onMouseUp(function(e) {
+			_physics.element.removeEventListener("mousemove", doExplosion);
 		});
 
 		if (touchable()) {
-			physics.onTouchStart(function(e) {
-				if (e.touches.length === 1)
-					physics.element.addEventListener("touchmove", doExplosion);
-			});
+			_physics
+					.onTouchStart(function(e) {
+						if (e.touches.length === 1)
+							_physics.element.addEventListener("touchmove",
+									doExplosion);
+					});
 
-			physics.onTouchEnd(function(e) {
+			_physics.onTouchEnd(function(e) {
 				if (e.touches.length === 1)
-					physics.element.removeEventListener("touchmove",
+					_physics.element.removeEventListener("touchmove",
 							doExplosion);
 			});
 		}
 
-		physics.onClick(doExplosion);
+		_physics.onClick(doExplosion);
 
 		requestAnimationFrame(gameLoop);
 	});
 
-	egg.src = "imgs/soccer-ball-25x25.png";
+	resLoader.load();
+
 }
 
 window.addEventListener("load", init);
 
-function translateShape(vertices, scale, posX, posY) {
-	var scaled = [];
-	for ( var i in vertices) {
-		scaled.push({
-			x : vertices[i].x * scale + posX,
-			y : posY - vertices[i].y * scale
-		});
+function nextLevel() {
+	resetWorld();
+	_levelLoader.load(++_levelPos % _levelLoader.levels.length);
+	$('#levelLabel').html("LEVEL " + (_levelPos % _levelLoader.levels.length + 1));
+}
+
+function restartLevel() {
+	resetWorld();
+	_levelLoader.load(_levelPos % _levelLoader.levels.length);
+}
+
+function isPointInBox(point, box) {
+	var xMin, xMax, yMin, yMax;
+
+	var pointA = box[0];
+	var pointB = box[1];
+	var pointC = box[2];
+
+	var p1 = pointA, p2 = pointB, p3 = pointC;
+	if (pointA.x !== pointB.x) {
+		p2 = pointC;
+		p3 = pointB;
 	}
-	return scaled;
+
+	yMin = p1.y;
+	yMax = p2.y;
+	if (p1.y > p2.y) {
+		yMin = p2.y;
+		yMax = p1.y;
+	}
+	xMin = p1.x;
+	xMax = p3.x;
+	if (p1.x > p3.x) {
+		xMin = p3.x;
+		xMAx = p1.x;
+	}
+
+	return point.x > xMin && point.x < xMax && point.y > yMin && point.y < yMax;
 }
 
 function touchable() {
 	return 'createTouch' in document;
 }
 
+function resetWorld() {
+	var body = _physics.world.GetBodyList();
+
+	while (body) {
+		var obj = body.GetUserData();
+
+		if (obj) {
+			var id = obj.details.id;
+			if (!id
+					|| (id && !(id === WALL_ID || id === LEFT_WALL_ID || id === RIGHT_WALL_ID))) {
+				obj.details.dead = true;
+			}
+
+		}
+		body = body.GetNext();
+
+	}
+
+	_terrain = null;
+
+}
+
 /*
  * This is core function for enabling destructible terrain Reference:
  * http://www.emanueleferonato.com/2013/10/17/how-to-create-destructible-terrain-using-box2d-step-2/
+ * polygon winding order for clipper (outer == CW; holes == CCW)
  */
 function doExplosion(e) {
 	e.preventDefault();
 
-	var self = physics;
+	if (!_terrain)
+		return;
+
+	var self = _physics;
 
 	var pos = {
 		x : e.offsetX || e.layerX,
@@ -251,14 +315,14 @@ function doExplosion(e) {
 	};
 
 	var explosionPolygon = createCircle(20, pos, 30);
-	for ( var i in terrain.details.terrainPolys) {
-		var poly = terrain.details.terrainPolys[i];
+	for ( var i in _terrain.details.terrainPolys) {
+		var poly = _terrain.details.terrainPolys[i];
 		poly.holes.push(explosionPolygon);
 	}
 
 	var tempPolys = [];
-	for ( var i in terrain.details.terrainPolys) {
-		var poly = terrain.details.terrainPolys[i];
+	for ( var i in _terrain.details.terrainPolys) {
+		var poly = _terrain.details.terrainPolys[i];
 
 		var subjPolygons = [poly.outer];
 		var clipPolygons = poly.holes;
@@ -280,24 +344,25 @@ function doExplosion(e) {
 	}
 
 	for (var i = 0; i < tempPolys.length; i++) {
-		var tolerance = 0.02;
+		var lightenTolerance = 0.02;
+		var cleanTolerance = 0.02;
 
-		var temp = ClipperLib.Lighten(tempPolys[i].outer, tolerance
-				* self.scale);
-		temp = temp[0];
-		for ( var j in tempPolys[i].holes) {
-			var temp = ClipperLib.Lighten(tempPolys[i].holes[j], tolerance
-					* self.scale);
-			tempPolys[i].holes[j] = temp[0];
-		}
+		tempPolys[i].outer = ClipperLib.Clean(tempPolys[i].outer,
+				cleanTolerance * self.scale);
+		tempPolys[i].outer = ClipperLib.Lighten(tempPolys[i].outer,
+				lightenTolerance * self.scale)[0];
+
+		tempPolys[i].holes = ClipperLib.Lighten(tempPolys[i].holes,
+				lightenTolerance * self.scale);
+		tempPolys[i].holes = ClipperLib.Clean(tempPolys[i].holes,
+				cleanTolerance * self.scale);
 	}
 
-	self.world.DestroyBody(terrain.body);
-	terrain = new Body(physics, {
-		id : DIRT_ID,
+	self.world.DestroyBody(_terrain.body);
+	_terrain = new Body(_physics, {
 		type : "static",
 		shape : "terrain",
-		color : "#996633",
+		patternImg : _resources.snowPattern,
 		terrainPolys : tempPolys
 	});
 
@@ -315,7 +380,12 @@ function createCircle(precision, origin, radius) {
 	return circleArray.reverse();
 }
 
-//
+// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+// http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+
+// requestAnimationFrame polyfill by Erik Möller
+// fixes from Paul Irish and Tino Zijdel
+
 (function() {
 	var lastTime = 0;
 	var vendors = ['ms', 'moz', 'webkit', 'o'];

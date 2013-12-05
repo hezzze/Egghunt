@@ -76,21 +76,53 @@
 				polyShape = new b2PolygonShape();
 				polyShape.SetAsVector(verticesVec);
 				this.fixtureDef.shape = polyShape;
-				this.body.CreateFixture(this.fixtureDef);
+				var fixture = this.body.CreateFixture(this.fixtureDef);
+				if (details.isSensor)
+					fixture.SetSensor(details.isSensor);
 			}
 
 		} else if (details.shape === "terrain") {
 			var terrainTriangles = [];
 			for (var i = 0; i < details.terrainPolys.length; i++) {
 				var poly = details.terrainPolys[i];
+				
+				if (!poly.outer) continue;
+				
 				var triContext = new poly2tri.SweepContext(poly.outer, {
 					cloneArrays : true
 				});
-				for ( var i in poly.holes) {
-					triContext.addHole(poly.holes[i]);
+				for ( var j in poly.holes) {
+					triContext.addHole(poly.holes[j]);
 				}
 
-				triContext.triangulate();
+				try {
+					triContext.triangulate();
+				} catch (e) {
+
+					console.log("I got this fixed!");
+
+					var delta = 0.0001;
+					var offsetted = [];
+					for ( var k in poly.outer) {
+						offsetted.push({
+							x : poly.outer[k].x
+									+ (Math.random() > 0.5 ? 1 : -1) * delta
+									* k,
+							y : poly.outer[k].y
+									+ (Math.random() > 0.5 ? 1 : -1) * delta
+									* k
+						});
+					}
+
+					triContext = new poly2tri.SweepContext(offsetted, {
+						cloneArrays : true
+					});
+					for ( var n in poly.holes) {
+						triContext.addHole(poly.holes[n]);
+					}
+
+					triContext.triangulate();
+				}
 				terrainTriangles = terrainTriangles.concat(triContext
 						.getTriangles()
 						|| []);
@@ -131,7 +163,7 @@
 			context.translate(pos.x * physics.scale, pos.y * physics.scale);
 			context.rotate(angle);
 
-			if (this.details.color) {
+			if (this.details.color || this.details.patternImg) {
 				context.fillStyle = this.details.color;
 
 				switch (this.details.shape) {
@@ -149,26 +181,38 @@
 						}
 						context.fill();
 						break;
-					case "terrain":
-						
-						for (var k in this.details.terrainPolys) {
+					case "terrain" :
+
+						if (this.details.patternImg) {
+							var pattern = context.createPattern(
+									this.details.patternImg, "repeat");
+							context.fillStyle = pattern;
+
+						}
+
+						for ( var k in this.details.terrainPolys) {
 							var poly = this.details.terrainPolys[k];
+
+							if (!poly.outer) continue;
 							
 							context.beginPath();
 							context.moveTo(poly.outer[0].x, poly.outer[0].y);
 							for (var i = 1; i < poly.outer.length; i++) {
-								context.lineTo(poly.outer[i].x, poly.outer[i].y);
+								context
+										.lineTo(poly.outer[i].x,
+												poly.outer[i].y);
 							}
+							context.closePath();
 							context.fill();
-							
+
 						}
-						
-						for (var k in this.details.terrainPolys) {
+
+						for ( var k in this.details.terrainPolys) {
 							var poly = this.details.terrainPolys[k];
-							
+
 							context.fillStyle = "black";
 							var holes = poly.holes;
-							for (var i in holes) {
+							for ( var i in holes) {
 								var hole = holes[i];
 								context.beginPath();
 								context.moveTo(hole[0].x, hole[0].y);
@@ -177,9 +221,9 @@
 								}
 								context.fill();
 							}
-							
+
 						}
-						
+
 						break;
 					case "block" :
 						context.fillRect(-this.details.width / 2,
@@ -211,7 +255,8 @@
 		height : 120,
 		radius : 30,
 		life : Infinity,
-		dead : false
+		dead : false,
+		zIndex : 0
 	};
 
 	Body.prototype.fixtureDefaults = {
