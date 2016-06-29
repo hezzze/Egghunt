@@ -1,3 +1,8 @@
+var ResourceLoader = require("./ResourceLoader");
+var Physics = require("./Physics");
+var Body = require("./Body");
+var levelLoader = require('./Levels');
+
 /*
  * Global variable dependency: _levelLoader
  */
@@ -18,21 +23,41 @@ var b2Mat22 = Box2D.Common.Math.b2Mat22;
 var b2RevoluteJointDef = Box2D.Dynamics.Joints.b2RevoluteJointDef;
 var b2PrismaticJointDef = Box2D.Dynamics.Joints.b2PrismaticJointDef;
 
+var CONSTANTS = {
+	WALL_ID: "wall",
+	START_POINT_ID: "startBox",
+	LEFT_WALL_ID: "leftWall",
+	RIGHT_WALL_ID: "rightWall",
+	BALL_R: 15,
+	BALL_ID: "egg",
+	BUNNY_R: 20
+};
+
 //Global Game Constants
-var WALL_ID = "wall";
-var START_POINT_ID = "startBox";
-var LEFT_WALL_ID = "leftWall";
-var RIGHT_WALL_ID = "rightWall";
-var BALL_R = 15;
-var BALL_ID = "egg";
-var BUNNY_R = 20;
+var WALL_ID = CONSTANTS.WALL_ID;
+var START_POINT_ID = CONSTANTS.TART_POINT_ID;
+var LEFT_WALL_ID = CONSTANTS.LEFT_WALL_ID;
+var RIGHT_WALL_ID = CONSTANTS.RIGHT_WALL_ID;
+var BALL_R = CONSTANTS.BALL_R;
+var BALL_ID = CONSTANTS.BALL_ID;
+var BUNNY_R = CONSTANTS.BUNNY_R;
 
 // Global Game Variables
-var _terrain;
+
+var __globals = {
+	_terrain: null,
+	_resources: null,
+	_canvasW: null,
+	_canvasH: null,
+	CONSTANTS: CONSTANTS
+};
+
+// var _terrain;
 var _resources;
+var _levelLoader;
 var _levelPos = 0;
 var _physics, _lastFrame = new Date().getTime();
-var _canvasW, _canvasH;
+// var _canvasW, _canvasH;
 
 var resourceList = [{
 	name : "ballImg",
@@ -67,12 +92,15 @@ function init() {
 
 	var resLoader = new ResourceLoader(resourceList, function(loaded) {
 
-		_resources = loaded;
+		__globals._resources = loaded;
+		_resources = __globals._resources;
 
 		var canvas = document.getElementById("b2dCanvas");
-		_physics = new Physics(canvas);
-		_canvasW = canvas.width;
-		_canvasH = canvas.height;
+		_physics = new Physics(canvas, null, __globals);
+		__globals._canvasW = canvas.width;
+		__globals._canvasH = canvas.height;
+		var _canvasW = __globals._canvasW, _canvasH = __globals._canvasH;
+		_levelLoader = new levelLoader(_physics, __globals);
 
 		// physics.debug();
 		_physics.collision();
@@ -292,7 +320,7 @@ function resetWorld() {
 
 	}
 
-	_terrain = null;
+	__globals._terrain = null;
 
 }
 
@@ -303,6 +331,8 @@ function resetWorld() {
  */
 function doExplosion(e) {
 	e.preventDefault();
+
+	var _terrain = __globals._terrain;
 
 	if (!_terrain)
 		return;
@@ -359,7 +389,7 @@ function doExplosion(e) {
 	}
 
 	self.world.DestroyBody(_terrain.body);
-	_terrain = new Body(_physics, {
+	__globals._terrain = new Body(_physics, {
 		type : "static",
 		shape : "terrain",
 		patternImg : _resources.snowPattern,

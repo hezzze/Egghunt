@@ -1,13 +1,18 @@
 /**
- * 
+ *
  */
 
 (function(window) {
 
+	var b2Vec2 = Box2D.Common.Math.b2Vec2;
+	var b2World = Box2D.Dynamics.b2World;
+
 	var GRAVITY = 30;
 	var BRUSH_R = 15;
 
-	function Physics(element, scale) {
+	function Physics(element, scale, __globals) {
+		this.resources = __globals._resources;
+
 		var gravity = new b2Vec2(0, GRAVITY);
 		this.world = new b2World(gravity, true);
 		this.element = element; // most likely the canvas element
@@ -179,4 +184,6 @@
 	};
 
 	window.Physics = Physics;
+
+	module.exports = Physics;
 })(window);

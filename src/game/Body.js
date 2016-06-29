@@ -1,7 +1,23 @@
 /**
- * 
+ *
  */
 (function(window) {
+
+	//Import Box2D constructors
+	var b2Vec2 = Box2D.Common.Math.b2Vec2;
+	var b2BodyDef = Box2D.Dynamics.b2BodyDef;
+	var b2Body = Box2D.Dynamics.b2Body;
+	var b2FixtureDef = Box2D.Dynamics.b2FixtureDef;
+	var b2Fixture = Box2D.Dynamics.b2Fixture;
+	var b2World = Box2D.Dynamics.b2World;
+	var b2MassData = Box2D.Collision.Shapes.b2MassData;
+	var b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
+	var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
+	var b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
+	var b2Transform = Box2D.Common.Math.b2Transform;
+	var b2Mat22 = Box2D.Common.Math.b2Mat22;
+	var b2RevoluteJointDef = Box2D.Dynamics.Joints.b2RevoluteJointDef;
+	var b2PrismaticJointDef = Box2D.Dynamics.Joints.b2PrismaticJointDef;
 
 	function Body(physics, details) {
 		this.details = details = details || {};
@@ -85,9 +101,9 @@
 			var terrainTriangles = [];
 			for (var i = 0; i < details.terrainPolys.length; i++) {
 				var poly = details.terrainPolys[i];
-				
+
 				if (!poly.outer) continue;
-				
+
 				var triContext = new poly2tri.SweepContext(poly.outer, {
 					cloneArrays : true
 				});
@@ -194,7 +210,7 @@
 							var poly = this.details.terrainPolys[k];
 
 							if (!poly.outer) continue;
-							
+
 							context.beginPath();
 							context.moveTo(poly.outer[0].x, poly.outer[0].y);
 							for (var i = 1; i < poly.outer.length; i++) {
@@ -274,5 +290,7 @@
 		bullet : false,
 		fixedRotation : false
 	};
+
+	module.exports = Body;
 
 })(window);

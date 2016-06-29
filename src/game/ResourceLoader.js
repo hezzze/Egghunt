@@ -24,9 +24,9 @@
 		res.src = url;
 
 		res.onload = function() {
-			
+
 			loader.resources[name] = res;
-			
+
 			if (++loader.loadCount == loader.objList.length)
 				loader.onload(loader.resources);
 		};
@@ -41,4 +41,6 @@
 	};
 
 	window.ResourceLoader = ResourceLoader;
+
+	module.exports = ResourceLoader;
 })(window);
