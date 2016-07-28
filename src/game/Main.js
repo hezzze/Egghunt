@@ -62,15 +62,15 @@ var _physics, _lastFrame = new Date().getTime();
 var resourceList = [{
 	name : "ballImg",
 	type : "image",
-	url : "imgs/angry-bird-30x30.png"
+	url : require("../../imgs/angry-bird-30x30.png")
 }, {
 	name : "bunnyImg",
 	type : "image",
-	url : "imgs/bunny-40x40.png"
+	url : require("../../imgs/bunny-40x40.png")
 }, {
 	name : "snowPattern",
 	type : "image",
-	url : "imgs/snow-textures-5.jpg"
+	url : require("../../imgs/snow-textures-5.jpg")
 }];
 
 window.onerror = function(error) {
