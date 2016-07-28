@@ -10,5 +10,6 @@
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true
   },
-  "buildOnSave": false
+  "buildOnSave": false,
+  "compileOnSave": false
 }
