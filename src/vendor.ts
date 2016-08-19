@@ -15,5 +15,10 @@ import 'rxjs';
 //there is a weird bug for clipper.js if putting box2dweb at the beginning
 // which will make .AddPolygons become undefined
 require('../lib/Box2dWeb-2.1.a.3.js');
-require('../lib/clipper.js');
+
+//needed for global reference to the Clipper lib
+//not quite understand how this works
+//http://stackoverflow.com/questions/12709074/how-do-you-explicitly-set-a-new-property-on-window-in-typescript
+window['ClipperLib'] = require('../lib/clipper.js');
+
 require('../lib/poly2tri.js');

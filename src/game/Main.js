@@ -345,47 +345,60 @@ function doExplosion(e) {
 	};
 
 	var explosionPolygon = createCircle(20, pos, 30);
-	for ( var i in _terrain.details.terrainPolys) {
-		var poly = _terrain.details.terrainPolys[i];
+
+	var polys = transformKey(_terrain.details.terrainPolys, true)
+
+	for ( var i in polys) {
+		var poly = polys[i];
 		poly.holes.push(explosionPolygon);
 	}
 
 	var tempPolys = [];
-	for ( var i in _terrain.details.terrainPolys) {
-		var poly = _terrain.details.terrainPolys[i];
+	for ( var i in polys) {
+		var poly = polys[i];
 
 		var subjPolygons = [poly.outer];
+
 		var clipPolygons = poly.holes;
-		var solutionPolygons = ClipperLib.ExPolygons();
+
+		var polytree = new ClipperLib.PolyTree();
+
 		var clipType = ClipperLib.ClipType.ctDifference;
 		var subjectFillType = ClipperLib.PolyFillType.pftNonZero;
 		var clipFillType = ClipperLib.PolyFillType.pftNonZero;
 
 		var cpr = new ClipperLib.Clipper();
-		cpr.AddPolygons(subjPolygons, ClipperLib.PolyType.ptSubject);
-		cpr.AddPolygons(clipPolygons, ClipperLib.PolyType.ptClip);
-		var succeeded = cpr.Execute(clipType, solutionPolygons,
+		cpr.AddPaths(subjPolygons, ClipperLib.PolyType.ptSubject, true);
+		cpr.AddPaths(clipPolygons, ClipperLib.PolyType.ptClip, true);
+		var succeeded = cpr.Execute(clipType, polytree,
 				subjectFillType, clipFillType);
+
+		// console.log(succeeded);
+
 		if (!succeeded) {
 			throw Error("Clipping failed...");
 		}
+
+		var solutionPolygons = ClipperLib.JS.PolyTreeToExPolygons(polytree);
 
 		tempPolys = tempPolys.concat(solutionPolygons || []);
 	}
 
 	for (var i = 0; i < tempPolys.length; i++) {
-		var lightenTolerance = 0.02;
-		var cleanTolerance = 0.02;
+		var lightenTolerance = 0.01;
+		var cleanTolerance = 0.01;
 
-		tempPolys[i].outer = ClipperLib.Clean(tempPolys[i].outer,
-				cleanTolerance * self.scale);
-		tempPolys[i].outer = ClipperLib.Lighten(tempPolys[i].outer,
-				lightenTolerance * self.scale)[0];
+		// for clipper 6.0 not doing the following steps seems to increase the performance
 
-		tempPolys[i].holes = ClipperLib.Lighten(tempPolys[i].holes,
-				lightenTolerance * self.scale);
-		tempPolys[i].holes = ClipperLib.Clean(tempPolys[i].holes,
-				cleanTolerance * self.scale);
+		// tempPolys[i].outer = ClipperLib.Clipper.CleanPolygon(tempPolys[i].outer,
+		// 		cleanTolerance * self.scale);
+		// tempPolys[i].outer = ClipperLib.JS.Lighten(tempPolys[i].outer,
+		// 		lightenTolerance * self.scale)[0];
+		//
+		// tempPolys[i].holes = ClipperLib.JS.Lighten(tempPolys[i].holes,
+		// 		lightenTolerance * self.scale);
+		// tempPolys[i].holes = ClipperLib.Clipper.CleanPolygons(tempPolys[i].holes,
+		// 		cleanTolerance * self.scale);
 	}
 
 	self.world.DestroyBody(_terrain.body);
@@ -393,18 +406,51 @@ function doExplosion(e) {
 		type : "static",
 		shape : "terrain",
 		patternImg : _resources.snowPattern,
-		terrainPolys : tempPolys
+		terrainPolys : transformKey(tempPolys)
 	});
 
 };
+
+function transformKey(polys, lowerToUpper) {
+	return polys.map(function(poly) {
+		return {
+			outer: transformPoly(poly.outer, lowerToUpper),
+			holes: poly.holes.map(function(hole) {
+				return transformPoly(hole, lowerToUpper);
+			})
+		}
+	});
+}
+
+function transformPoly(poly, lowerToUpper) {
+	var resultPoly = [];
+
+	for (var j = 0; j < poly.length; j++) {
+		var vertex = poly[j];
+
+		if (lowerToUpper) {
+			resultPoly.push({
+				X: vertex.x,
+				Y: vertex.y
+			});
+		} else {
+			resultPoly.push({
+				x: vertex.X,
+				y: vertex.Y
+			});
+		}
+	}
+
+	return resultPoly;
+}
 
 function createCircle(precision, origin, radius) {
 	var angle = 2 * Math.PI / precision;
 	var circleArray = [];
 	for (var i = 0; i < precision; i++) {
 		circleArray.push({
-			x : origin.x + radius * Math.cos(angle * i),
-			y : origin.y + radius * Math.sin(angle * i)
+			X: origin.x + radius * Math.cos(angle * i),
+			Y: origin.y + radius * Math.sin(angle * i)
 		});
 	}
 	return circleArray.reverse();
