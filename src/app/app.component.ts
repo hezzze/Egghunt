@@ -10,7 +10,7 @@ import '../../public/css/styles.css';
 export class AppComponent implements AfterViewChecked {
 
   ngAfterViewChecked () {
-    require("../game/Main");
+    require("../p2/Main");
   }
 
 }

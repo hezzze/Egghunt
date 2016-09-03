@@ -19,6 +19,8 @@
 	// var b2RevoluteJointDef = Box2D.Dynamics.Joints.b2RevoluteJointDef;
 	// var b2PrismaticJointDef = Box2D.Dynamics.Joints.b2PrismaticJointDef;
 
+  var FLAG = false;
+
   const DEFAULTS = {
 		shape : "block",
 		width : 120,
@@ -77,7 +79,7 @@
 
     var body = this.body;
 
-    body.position = translatePoint({
+    body.position = screenToWorld({
       x: details.x || 0,
       y: details.y || 0
     });
@@ -103,7 +105,7 @@
 				// 		/ physics.scale);
 				break;
 			case "polygon" :
-        var polyPoints = translatePoints(details.points).reverse();
+        var polyPoints = details.points.map(screenToWorld).reverse();
         var polyShape = new p2.Convex({
           vertices: polyPoints
         });
@@ -210,10 +212,8 @@
 				var verticesVec = [];
 				for ( var j in terrainTriangles[i].points_) {
 					var point = terrainTriangles[i].points_[j];
-					verticesVec.push(translatePoint(point));
+					verticesVec.push(screenToWorld(point));
 				}
-
-        verticesVec.reverse();
 
         body.addShape(new p2.Convex({
           vertices: verticesVec
@@ -262,7 +262,13 @@
 						context.fill();
 						break;
 					case "polygon" :
-						var points = this.details.points;
+						var points = this.details.points.map(translateForScreen);
+
+            if (!FLAG) {
+              console.log(points);
+              FLAG = true;
+            }
+
 						context.beginPath();
 						context.moveTo(points[0].x, points[0].y);
 						for (var i = 1; i < points.length; i++) {
@@ -284,12 +290,14 @@
 
 							if (!poly.outer) continue;
 
+              var polyPoints = poly.outer.map(translateForScreen);
+
 							context.beginPath();
-							context.moveTo(poly.outer[0].x, poly.outer[0].y);
-							for (var i = 1; i < poly.outer.length; i++) {
+							context.moveTo(polyPoints[0].x, polyPoints[0].y);
+							for (var i = 1; i < polyPoints.length; i++) {
 								context
-										.lineTo(poly.outer[i].x,
-												poly.outer[i].y);
+										.lineTo(polyPoints[i].x,
+												polyPoints[i].y);
 							}
 							context.closePath();
 							context.fill();
@@ -302,11 +310,11 @@
 							context.fillStyle = "black";
 							var holes = poly.holes;
 							for ( var i in holes) {
-								var hole = holes[i];
+								var holePoints = holes[i].map(translateForScreen);
 								context.beginPath();
-								context.moveTo(hole[0].x, hole[0].y);
-								for (var j = 1; j < hole.length; j++) {
-									context.lineTo(hole[j].x, hole[j].y);
+								context.moveTo(holePoints[0].x, holePoints[0].y);
+								for (var j = 1; j < holePoints.length; j++) {
+									context.lineTo(holePoints[j].x, holePoints[j].y);
 								}
 								context.fill();
 							}
@@ -334,16 +342,15 @@
 
 		};
 
-    function translatePoints(points) {
-      var translated = [];
-      for ( var i in points) {
-        translated.push(translatePoint(points[i]));
-      }
-      return translated;
+    function screenToWorld(point) {
+      return [point.x / physics.scale, point.y / physics.scale];
     }
 
-    function translatePoint(point) {
-      return [point.x / physics.scale, (physics.__globals._canvasH - point.y) / physics.scale];
+    function translateForScreen(point) {
+      return {
+        x: point.x,
+        y: -point.y
+      };
     }
 
 	}

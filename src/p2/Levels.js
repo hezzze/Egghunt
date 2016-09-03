@@ -320,7 +320,7 @@
 		function translatePoint(point) {
 			return {
 				x : point.x * _canvasW,
-				y : _canvasH - point.y * _canvasW
+				y : point.y * _canvasW
 			};
 		}
 

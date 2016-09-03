@@ -162,7 +162,7 @@ function init() {
           image : _resources.ballImg,
           shape : "circle",
           x : posX,
-          y : posY,
+          y : _canvasH - posY,
           radius : BALL_R,
           width : BALL_R * 2,
           height : BALL_R * 2,
@@ -325,7 +325,10 @@ function doExplosion(e) {
 		y : e.offsetY || e.layerY
 	};
 
-	var explosionPolygon = createCircle(20, pos, 30);
+	var explosionPolygon = createCircle(20, {
+		x: pos.x,
+		y: __globals._canvasH - pos.y
+	}, 30);
 
 	var polys = transformKey(_terrain.details.terrainPolys, true)
 
