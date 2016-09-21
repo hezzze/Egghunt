@@ -72,7 +72,7 @@
 
     //TODO setup dynamic or static
     this.body = new p2.Body({
-      mass: details.type == "static" ? 0 : 1,
+      mass: details.type == "static" ? 0 : 0.7,
     });
 
     this.body.__wrapper = this;
@@ -105,10 +105,23 @@
 				// 		/ physics.scale);
 				break;
 			case "polygon" :
-        var polyPoints = details.points.map(screenToWorld).reverse();
-        var polyShape = new p2.Convex({
-          vertices: polyPoints
-        });
+        var polyPoints = details.points.map(screenToWorld);
+        var polyShape;
+        try {
+          polyShape = new p2.Convex({
+            vertices: polyPoints
+          });
+        } catch (e) {
+          if (/Convex vertices must be given in conter-clockwise winding\./.test(e)) {
+            console.debug("warning: automatic reverse points");
+            polyShape = new p2.Convex({
+              vertices: polyPoints.reverse()
+            });
+          } else {
+            throw e;
+          }
+        }
+
         polyShape.sensor = details.isSensor ? true : false;
         body.addShape(polyShape);
 
@@ -250,7 +263,7 @@
 
 			context.save();
 			context.translate(pos[0] * physics.scale, physics.__globals._canvasH - pos[1] * physics.scale);
-			context.rotate(angle);
+			context.rotate(-angle);
 
 			if (this.details.color || this.details.patternImg) {
 				context.fillStyle = this.details.color;

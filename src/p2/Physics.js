@@ -22,8 +22,12 @@
 		// this.world = new b2World(gravity, true);
 
     this.world = new p2.World({
-			gravity: [0, -10]
+			gravity: [0, -30]
 		});
+
+		this.world.defaultContactMaterial.friction = 0.5;
+		this.world.defaultContactMaterial.restitution = 0;
+		this.world.defaultContactMaterial.stiffness = 1e4;
 
 		this.element = element; // most likely the canvas element
 		this.context = element.getContext("2d");

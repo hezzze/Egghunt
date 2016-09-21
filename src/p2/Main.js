@@ -98,7 +98,7 @@ function init() {
 			color : "#e5e5e5",
 			type : "static",
 			x : _canvasW / 2,
-			y : _canvasH + 10,
+			y : -10,
 			height : 40,
 			width : _canvasW
 		});
@@ -109,7 +109,7 @@ function init() {
 			color : "#e5e5e5",
 			type : "static",
 			x : _canvasW / 2,
-			y : -20,
+			y : _canvasH+20,
 			height : 40,
 			width : _canvasW
 		});
