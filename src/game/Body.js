@@ -89,7 +89,7 @@
 						y : point.y / physics.scale
 					});
 				}
-				polyShape = new b2PolygonShape();
+				var polyShape = new b2PolygonShape();
 				polyShape.SetAsVector(verticesVec);
 				this.fixtureDef.shape = polyShape;
 				var fixture = this.body.CreateFixture(this.fixtureDef);
