@@ -1,1 +1,0 @@
-{"version":3,"sources":["webpack:///webpack:///public/css/styles.css"],"names":[],"mappings":"AAAA,OACE,sBACA,kBAAmB","file":"app.33d344334b70dd407834.css","sourcesContent":["canvas {\n  background-color: black;\n  display: table-cell\n}\n\n\n\n/** WEBPACK FOOTER **\n ** webpack:///public/css/styles.css\n **/"],"sourceRoot":""}
