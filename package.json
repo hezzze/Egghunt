@@ -1,9 +1,9 @@
 {
   "name": "egghunt",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A physics game featuring destructible terrain",
   "scripts": {
-    "build": "webpack",
+    "build": "rimraf build && webpack --config config/webpack.prod.js --progress --profile --bail",
     "start": "webpack-dev-server --devtool eval-source-map --progress --inline --colors --hot --content-base build"
   },
   "author": "",
@@ -17,9 +17,11 @@
     "file-loader": "^0.8.5",
     "html-webpack-plugin": "^2.22.0",
     "json-loader": "^0.5.4",
+    "rimraf": "^2.5.4",
     "style-loader": "^0.13.0",
     "url-loader": "^0.5.7",
-    "webpack": "^1.12.9"
+    "webpack": "^1.12.9",
+    "webpack-merge": "^0.14.1"
   },
   "dependencies": {
     "babel-core": "^6.4.0",
