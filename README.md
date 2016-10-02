@@ -1,6 +1,8 @@
 # Egghunt
 A physics HTML5 canvas game featuring high performance destructible terrain
 
+[Demo](http://hezzze.github.io/Egghunt/)
+
 ### Version 0.0.3
 
 - switched to webpack + React for the app container
