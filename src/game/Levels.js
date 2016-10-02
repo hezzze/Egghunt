@@ -19,7 +19,7 @@
 	function levelLoader(_physics, __globals) {
 
 		var WALL_ID = __globals.CONSTANTS.WALL_ID;
-		var START_POINT_ID = __globals.CONSTANTS.TART_POINT_ID;
+		var START_POINT_ID = __globals.CONSTANTS.START_POINT_ID;
 		var LEFT_WALL_ID = __globals.CONSTANTS.LEFT_WALL_ID;
 		var RIGHT_WALL_ID = __globals.CONSTANTS.RIGHT_WALL_ID;
 		var BALL_R = __globals.CONSTANTS.BALL_R;
